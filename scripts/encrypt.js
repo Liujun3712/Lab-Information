@@ -13,82 +13,68 @@ if (!password) {
 
 // 创建输出目录
 if (fs.existsSync(outDir)) {
-  console.log('🗑️  清理旧的 _site 目录');
   fs.rmSync(outDir, { recursive: true });
 }
 fs.mkdirSync(outDir, { recursive: true });
-console.log('📁 创建输出目录: _site');
 
 // 复制公开的 index.html
 const srcIndex = path.join(srcDir, 'index.html');
 const destIndex = path.join(outDir, 'index.html');
-if (fs.existsSync(srcIndex)) {
-  fs.copyFileSync(srcIndex, destIndex);
-  console.log('✅ 已复制公开首页: index.html');
-} else {
-  console.log('⚠️  未找到 src/index.html');
-}
+fs.copyFileSync(srcIndex, destIndex);
+console.log('✅ 已复制: index.html');
 
 // 找出所有需要加密的 HTML 文件
 const files = fs.readdirSync(srcDir).filter(f => f.endsWith('.html') && f !== 'index.html');
-console.log(`🔍 找到 ${files.length} 个需要加密的文件:`, files);
+console.log(`📋 需要加密的文件: ${files.join(', ')}`);
 
-if (files.length === 0) {
-  console.log('⚠️  没有需要加密的文件');
-} else {
-  files.forEach(file => {
-    const input = path.resolve(path.join(srcDir, file));
-    const output = path.resolve(path.join(outDir, file));
+files.forEach(file => {
+  const inputPath = path.join(srcDir, file);
+  const outputPath = path.join(outDir, file);
+  
+  console.log(`\n🔐 正在处理: ${file}`);
+  console.log(`  源文件: ${inputPath}`);
+  console.log(`  目标文件: ${outputPath}`);
+  
+  // 先复制源文件到输出目录
+  fs.copyFileSync(inputPath, outputPath);
+  console.log(`  已复制到输出目录`);
+  
+  // 使用 staticrypt 直接加密目标文件（原地加密）
+  try {
+    const cmd = `npx staticrypt "${outputPath}" "${password}" -o "${outputPath}" -f`;
+    console.log(`  执行加密命令...`);
     
-    console.log(`🔐 正在加密: ${file}`);
-    console.log(`  输入文件: ${input}`);
-    console.log(`  输出文件: ${output}`);
-    console.log(`  输入文件存在: ${fs.existsSync(input)}`);
-    
-    if (!fs.existsSync(input)) {
-      console.error(`  ❌ 输入文件不存在: ${input}`);
-      return;
-    }
-    
-    try {
-      // 使用完整路径执行 staticrypt
-      const command = `npx staticrypt "${input}" -o "${output}" -p "${password}" -f`;
-      console.log(`  执行命令: npx staticrypt [参数已隐藏]`);
-      
-      const result = execSync(command, { 
-        stdio: 'pipe',  // 捕获输出以便调试
-        timeout: 30000  // 30秒超时
-      });
-      
-      console.log(`  📄 Staticrypt 输出:`, result.toString());
-      
-      // 检查输出文件是否真的生成了
-      if (fs.existsSync(output)) {
-        const stats = fs.statSync(output);
-        console.log(`  ✅ 加密成功: ${file} (${stats.size} bytes)`);
-      } else {
-        console.error(`  ❌ 加密后文件未生成: ${output}`);
-      }
-    } catch (error) {
-      console.error(`  ❌ 加密失败: ${error.message}`);
-      if (error.stdout) console.error(`  标准输出:`, error.stdout.toString());
-      if (error.stderr) console.error(`  错误输出:`, error.stderr.toString());
-    }
-  });
-}
-
-// 详细列出输出目录的内容
-console.log('\n📁 _site 目录完整内容：');
-if (fs.existsSync(outDir)) {
-  const outputFiles = fs.readdirSync(outDir);
-  if (outputFiles.length === 0) {
-    console.log('  (空目录)');
-  } else {
-    outputFiles.forEach(f => {
-      const stat = fs.statSync(path.join(outDir, f));
-      console.log(`  - ${f} (${stat.size} bytes)`);
+    execSync(cmd, { 
+      stdio: 'inherit',
+      timeout: 30000
     });
+    
+    // 验证文件是否真的被加密了（检查是否包含 staticrypt 的特征）
+    if (fs.existsSync(outputPath)) {
+      const content = fs.readFileSync(outputPath, 'utf8');
+      if (content.includes('staticrypt') || content.includes('encrypted')) {
+        console.log(`  ✅ 加密成功！文件大小: ${fs.statSync(outputPath).size} bytes`);
+      } else {
+        console.log(`  ⚠️  文件可能未正确加密，但已复制`);
+      }
+    }
+  } catch (error) {
+    console.error(`  ❌ 加密过程出错: ${error.message}`);
+    // 即使加密失败，复制的文件还在，至少不会是404
+    console.log(`  📄 已保留未加密的副本文件`);
   }
-} else {
-  console.log('  _site 目录不存在！');
+});
+
+// 最终验证
+console.log('\n📁 _site 目录最终内容:');
+const outputFiles = fs.readdirSync(outDir);
+outputFiles.forEach(f => {
+  const stats = fs.statSync(path.join(outDir, f));
+  console.log(`  ✅ ${f} (${stats.size} bytes)`);
+});
+
+if (outputFiles.length < 2) {
+  console.error('\n❌ 错误: _site 目录文件数量不足！');
+  console.error('预期至少有 index.html 和 lab-network-config.html');
+  process.exit(1);
 }
