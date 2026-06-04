@@ -1,0 +1,10 @@
+{
+  "name": "lab-docs",
+  "private": true,
+  "scripts": {
+    "encrypt": "node scripts/encrypt.js"
+  },
+  "devDependencies": {
+    "staticrypt": "^3.5.0"
+  }
+}
