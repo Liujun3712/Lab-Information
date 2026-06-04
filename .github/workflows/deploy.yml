@@ -5,6 +5,10 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+# 强制所有 action 使用 Node 24 运行时（消除弃用警告）
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -21,28 +25,24 @@ jobs:
       - name: 检出代码
         uses: actions/checkout@v4
 
-      - name: 设置 Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: 安装 staticrypt
-        run: npm install -g staticrypt@3.5.0
+      - name: 安装 staticrypt 最新版
+        run: npm install -g staticrypt@latest
 
       - name: 加密敏感页面并准备部署目录
         env:
-          PASSWORD: ${{ secrets.ENCRYPTION_PASSWORD }}
+          STATICRYPT_PASSWORD: ${{ secrets.ENCRYPTION_PASSWORD }}
         run: |
           mkdir -p _site
           cp src/index.html _site/index.html
-          export STATICRYPT_PASSWORD="$PASSWORD"
+          
+          # 通过环境变量传密码，避免交互提示
           staticrypt src/lab-network-config.html -o _site/lab-network-config.html -f
           
           if [ ! -f "_site/lab-network-config.html" ]; then
             echo "❌ 加密文件未生成！"
             exit 1
           fi
-          echo "✅ 加密完成，_site 目录内容："
+          echo "✅ 加密完成，_site 内容："
           ls -la _site/
 
       - name: 上传 Pages 产物
