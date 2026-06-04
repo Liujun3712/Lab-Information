@@ -31,7 +31,7 @@ jobs:
 
       - name: 加密私密页面
         env:
-          ENCRYPTION_PASSWORD: ${{ secrets.ENCRYPTION_PASSWORD }}  # 从 Secrets 读取密码
+          ENCRYPTION_PASSWORD: ${{ secrets.ENCRYPTION_PASSWORD }}
         run: npm run encrypt
 
       - name: 上传 Pages 产物
