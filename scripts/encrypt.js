@@ -13,9 +13,11 @@ if (!password) {
 
 // 创建输出目录
 if (fs.existsSync(outDir)) {
+  console.log('🗑️  清理旧的 _site 目录');
   fs.rmSync(outDir, { recursive: true });
 }
 fs.mkdirSync(outDir, { recursive: true });
+console.log('📁 创建输出目录: _site');
 
 // 复制公开的 index.html
 const srcIndex = path.join(srcDir, 'index.html');
@@ -27,43 +29,47 @@ console.log('✅ 已复制: index.html');
 const files = fs.readdirSync(srcDir).filter(f => f.endsWith('.html') && f !== 'index.html');
 console.log(`📋 需要加密的文件: ${files.join(', ')}`);
 
-files.forEach(file => {
-  const inputPath = path.join(srcDir, file);
-  const outputPath = path.join(outDir, file);
-  
-  console.log(`\n🔐 正在处理: ${file}`);
-  console.log(`  源文件: ${inputPath}`);
-  console.log(`  目标文件: ${outputPath}`);
-  
-  // 先复制源文件到输出目录
-  fs.copyFileSync(inputPath, outputPath);
-  console.log(`  已复制到输出目录`);
-  
-  // 使用 staticrypt 直接加密目标文件（原地加密）
-  try {
-    const cmd = `npx staticrypt "${outputPath}" "${password}" -o "${outputPath}" -f`;
-    console.log(`  执行加密命令...`);
+if (files.length === 0) {
+  console.log('⚠️  没有需要加密的文件');
+} else {
+  files.forEach(file => {
+    const inputPath = path.join(srcDir, file);
+    const outputPath = path.join(outDir, file);
     
-    execSync(cmd, { 
-      stdio: 'inherit',
-      timeout: 30000
-    });
+    console.log(`\n🔐 正在加密: ${file}`);
     
-    // 验证文件是否真的被加密了（检查是否包含 staticrypt 的特征）
-    if (fs.existsSync(outputPath)) {
-      const content = fs.readFileSync(outputPath, 'utf8');
-      if (content.includes('staticrypt') || content.includes('encrypted')) {
-        console.log(`  ✅ 加密成功！文件大小: ${fs.statSync(outputPath).size} bytes`);
+    try {
+      // 关键修改：使用正确的 staticrypt 命令语法
+      const cmd = `npx staticrypt "${inputPath}" "${password}" -o "${outputPath}" -f`;
+      console.log(`  执行命令: npx staticrypt [参数已隐藏]`);
+      
+      execSync(cmd, { 
+        stdio: 'inherit',
+        timeout: 30000
+      });
+      
+      // 验证加密是否成功
+      if (fs.existsSync(outputPath)) {
+        const content = fs.readFileSync(outputPath, 'utf8');
+        const fileSize = fs.statSync(outputPath).size;
+        
+        if (content.includes('staticrypt') || content.includes('encrypted') || content.includes('crypto')) {
+          console.log(`  ✅ 加密成功！文件大小: ${fileSize} bytes`);
+          console.log(`  📄 已生成加密文件: ${outputPath}`);
+        } else {
+          console.log(`  ⚠️  警告：文件可能未被正确加密，文件大小: ${fileSize} bytes`);
+          console.log(`  📄 文件前100个字符: ${content.substring(0, 100)}`);
+        }
       } else {
-        console.log(`  ⚠️  文件可能未正确加密，但已复制`);
+        console.error(`  ❌ 加密后文件未找到: ${outputPath}`);
       }
+    } catch (error) {
+      console.error(`  ❌ 加密过程出错: ${error.message}`);
+      console.error(`  错误详情:`, error.stderr?.toString() || '无错误输出');
+      process.exit(1);
     }
-  } catch (error) {
-    console.error(`  ❌ 加密过程出错: ${error.message}`);
-    // 即使加密失败，复制的文件还在，至少不会是404
-    console.log(`  📄 已保留未加密的副本文件`);
-  }
-});
+  });
+}
 
 // 最终验证
 console.log('\n📁 _site 目录最终内容:');
@@ -71,10 +77,15 @@ const outputFiles = fs.readdirSync(outDir);
 outputFiles.forEach(f => {
   const stats = fs.statSync(path.join(outDir, f));
   console.log(`  ✅ ${f} (${stats.size} bytes)`);
+  
+  // 检查文件内容的前几个字符，确认是否是加密文件
+  if (f !== 'index.html') {
+    const content = fs.readFileSync(path.join(outDir, f), 'utf8');
+    console.log(`    文件开头: ${content.substring(0, 80)}...`);
+  }
 });
 
-if (outputFiles.length < 2) {
-  console.error('\n❌ 错误: _site 目录文件数量不足！');
-  console.error('预期至少有 index.html 和 lab-network-config.html');
+if (!outputFiles.includes('lab-network-config.html')) {
+  console.error('\n❌ 严重错误: lab-network-config.html 未生成！');
   process.exit(1);
 }
