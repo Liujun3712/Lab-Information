@@ -2,8 +2,8 @@ name: 加密并部署到 GitHub Pages
 
 on:
   push:
-    branches: [ main ]   # 当 main 分支有推送时触发
-  workflow_dispatch:      # 允许手动触发
+    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:
@@ -26,13 +26,24 @@ jobs:
         with:
           node-version: 20
 
-      - name: 安装依赖
-        run: npm install
+      - name: 安装 staticrypt
+        run: npm install -g staticrypt@3.5.0
 
-      - name: 加密私密页面
+      - name: 加密敏感页面并准备部署目录
         env:
-          ENCRYPTION_PASSWORD: ${{ secrets.ENCRYPTION_PASSWORD }}
-        run: npm run encrypt
+          PASSWORD: ${{ secrets.ENCRYPTION_PASSWORD }}
+        run: |
+          mkdir -p _site
+          cp src/index.html _site/index.html
+          export STATICRYPT_PASSWORD="$PASSWORD"
+          staticrypt src/lab-network-config.html -o _site/lab-network-config.html -f
+          
+          if [ ! -f "_site/lab-network-config.html" ]; then
+            echo "❌ 加密文件未生成！"
+            exit 1
+          fi
+          echo "✅ 加密完成，_site 目录内容："
+          ls -la _site/
 
       - name: 上传 Pages 产物
         uses: actions/upload-pages-artifact@v3
