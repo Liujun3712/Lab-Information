@@ -95,12 +95,15 @@ files.forEach(file => {
   console.log(`🔐 已加密: ${file}`);
 });
 
-// --- 复制静态资源（如图片）到 _site ---
-const srcAssets = path.join(srcDir, 'images');
-const outAssets = path.join(outDir, 'images');
-if (fs.existsSync(srcAssets)) {
-  fs.cpSync(srcAssets, outAssets, { recursive: true });
-  console.log('🖼️  已复制图片资源');
-}
+// --- 复制静态资源（图片、apk 等）到 _site ---
+const assetDirs = ['images', 'apks'];
+assetDirs.forEach(dir => {
+  const srcDirPath = path.join(srcDir, dir);
+  const outDirPath = path.join(outDir, dir);
+  if (fs.existsSync(srcDirPath)) {
+    fs.cpSync(srcDirPath, outDirPath, { recursive: true });
+    console.log(`📁 已复制静态资源: ${dir}`);
+  }
+});
 
 console.log('✅ 所有页面处理完成');
