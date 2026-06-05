@@ -44,17 +44,69 @@ files.forEach(file => {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>受保护页面</title>
   <style>
-    body { font-family: -apple-system, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; background: #f3f4f6; }
-    .box { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 90%; max-width: 400px; }
-    input[type="password"] { width: 100%; padding: 0.6rem; margin: 1rem 0; border: 1px solid #d1d5db; border-radius: 6px; }
-    button { width: 100%; padding: 0.6rem; background: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; }
-    .error { color: #dc2626; margin-top: 0.5rem; display: none; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: #f3f4f6;
+    }
+    .box {
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      width: 90%;
+      max-width: 400px;
+    }
+    h2 {
+      margin-bottom: 1rem;
+      color: #111827;
+    }
+    input[type="password"] {
+      width: 100%;
+      padding: 0.6rem;
+      margin: 0.5rem 0 1rem;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 1rem;
+      box-sizing: border-box;
+      outline: none;
+    }
+    input[type="password"]:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+    }
+    button {
+      width: 100%;
+      padding: 0.6rem;
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 1rem;
+      box-sizing: border-box;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: #1d4ed8;
+    }
+    .error {
+      color: #dc2626;
+      margin-top: 0.5rem;
+      display: none;
+      font-size: 0.9rem;
+    }
   </style>
 </head>
 <body>
   <div class="box" id="lock">
     <h2>🔐 需要密码</h2>
-    <input type="password" id="pwd" placeholder="输入访问密码">
+    <input type="password" id="pwd" placeholder="输入访问密码" onkeydown="if(event.key==='Enter')decrypt()">
     <button onclick="decrypt()">解锁</button>
     <div class="error" id="error">密码错误，请重试</div>
   </div>
