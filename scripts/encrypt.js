@@ -95,4 +95,12 @@ files.forEach(file => {
   console.log(`🔐 已加密: ${file}`);
 });
 
+// --- 复制静态资源（如图片）到 _site ---
+const srcAssets = path.join(srcDir, 'images');
+const outAssets = path.join(outDir, 'images');
+if (fs.existsSync(srcAssets)) {
+  fs.cpSync(srcAssets, outAssets, { recursive: true });
+  console.log('🖼️  已复制图片资源');
+}
+
 console.log('✅ 所有页面处理完成');
