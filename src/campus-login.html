@@ -1,11 +1,156 @@
 <!DOCTYPE html>
-<html lang="zh">
-<head><meta charset="UTF-8"><title>路由器配置</title></head>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>校园网登录</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #f5f7fb;
+            color: #1f2937;
+            display: flex;
+            justify-content: center;
+            padding: 2rem 1rem;
+        }
+        .container {
+            max-width: 700px;
+            width: 100%;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            padding: 2rem 1.5rem;
+        }
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            color: #111827;
+        }
+        h2 {
+            font-size: 1.2rem;
+            margin: 1.5rem 0 0.5rem;
+            color: #2563eb;
+        }
+        h3 {
+            font-size: 1rem;
+            margin: 1rem 0 0.5rem;
+            color: #374151;
+        }
+        p, li {
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: #4b5563;
+            margin-bottom: 0.5rem;
+        }
+        code, .code {
+            background: #f3f4f6;
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+            font-size: 0.85rem;
+            word-break: break-word;
+        }
+        .key-info {
+            background: #fffbeb;
+            border-left: 3px solid #f59e0b;
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            margin: 1rem 0;
+        }
+        .important-note {
+            background: #f0f9ff;
+            border-left: 3px solid #2563eb;
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            margin: 1rem 0;
+        }
+        ul, ol {
+            padding-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .image-placeholder {
+            background: #f9fafb;
+            border: 2px dashed #d1d5db;
+            border-radius: 8px;
+            padding: 2rem 1rem;
+            text-align: center;
+            margin: 1.5rem 0;
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+        .image-placeholder p {
+            margin: 0;
+        }
+        .highlight {
+            background: #fef3c7;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+        a {
+            color: #2563eb;
+            word-break: break-all;
+        }
+        blockquote {
+            border-left: 4px solid #e5e7eb;
+            padding-left: 1rem;
+            color: #6b7280;
+            margin: 1rem 0;
+            font-style: italic;
+        }
+        .button-hint {
+            background: #dcfce7;
+            border-radius: 6px;
+            padding: 0.75rem 1rem;
+            margin-top: 1rem;
+            font-weight: 500;
+        }
+    </style>
+</head>
 <body>
-  <h2>📡 路由器设置参数</h2>
-  <pre>
-Campus Login
-...
-  </pre>
+    <div class="container">
+        <h1>校园网登录</h1>
+
+        <h2>设置入口</h2>
+        <h3>1. 方式一</h3>
+        <p><span class="code">登录密码：306D13808644367</span></p>
+        <p>登录路由器管理页面 <code>192.168.8.1</code> —— <code>系统</code> —— <code>高级设置</code> —— <code>前往 LuCI</code></p>
+        <blockquote>
+            <p>LuCI 界面账号密码：<br>
+            用户名：<code>root</code><br>
+            密码：<code>306D13808644367</code></p>
+        </blockquote>
+        <p>进入 LuCI 后 <code>服务</code> —— <code>锐捷认证</code></p>
+
+        <h3>2. 方式二</h3>
+        <p><a href="http://192.168.8.1:8080/cgi-bin/luci/admin/services/mentohust" target="_blank">http://192.168.8.1:8080/cgi-bin/luci/admin/services/mentohust</a></p>
+
+        <h2>用户名与密码相关</h2>
+        <ol>
+            <li>需使用在校同学的 <span class="highlight">校园网账户</span> 与 <span class="highlight">校园网登录密码</span>。</li>
+            <li>账号不需要在学校缴费。</li>
+            <li>统一认证系统密码与校园网网络登录密码不一定一致，可在电脑确认后输入正确的校园网登录密码。</li>
+        </ol>
+
+        <h2>配置截图</h2>
+        <p>请按照截图进行配置，尤其注意以下设置：</p>
+        <ul>
+            <li>网络接口：<code>eth0</code></li>
+            <li>组播地址：<code>锐捷</code></li>
+            <li>DHCP 方式：<code>认证后</code></li>
+            <li>DHCP 脚本：<code>udhcpc -i</code></li>
+        </ul>
+
+        <!-- 图片插入位置 -->
+        <div class="image-placeholder">
+            <p><img src="images/ruijie-config.png" alt="锐捷配置截图" style="max-width:100%; height:auto; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.1);"></p>
+            <p style="font-size:0.8rem; margin-top:0.5rem;">（请将此处替换为实际的截图 <code>&lt;img&gt;</code> 标签）</p>
+        </div>
+
+        <div class="button-hint">
+            ✅ 配置成功后，勾选 <code>启用</code> 并点击底部的 <code>保存并应用</code> 按钮，即可上网。
+        </div>
+    </div>
 </body>
 </html>
