@@ -1,13 +1,176 @@
 <!DOCTYPE html>
-<html lang="zh">
-<head><meta charset="UTF-8"><title>路由器配置</title></head>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tailscale 配置</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #f5f7fb;
+            color: #1f2937;
+            display: flex;
+            justify-content: center;
+            padding: 2rem 1rem;
+        }
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            padding: 2rem 1.5rem;
+        }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 1.5rem;
+            color: #2563eb;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        .back-link:hover { text-decoration: underline; }
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            color: #111827;
+        }
+        h2 {
+            font-size: 1.3rem;
+            margin: 2rem 0 0.8rem;
+            color: #2563eb;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 0.3rem;
+        }
+        h3 {
+            font-size: 1.1rem;
+            margin: 1.2rem 0 0.5rem;
+            color: #374151;
+        }
+        p, li {
+            font-size: 0.95rem;
+            line-height: 1.7;
+            color: #4b5563;
+            margin-bottom: 0.8rem;
+        }
+        a { color: #2563eb; word-break: break-word; }
+        code {
+            background: #f3f4f6;
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            font-size: 0.85rem;
+        }
+        ul, ol {
+            padding-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .note-block {
+            background: #fef9c3;
+            border-left: 4px solid #eab308;
+            padding: 0.8rem 1rem;
+            border-radius: 6px;
+            margin: 1.2rem 0;
+        }
+        .download-btn {
+            display: inline-block;
+            background: #2563eb;
+            color: white;
+            padding: 0.6rem 1.2rem;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: background 0.2s;
+            margin: 0.5rem 0;
+        }
+        .download-btn:hover { background: #1d4ed8; }
+        .image-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+            align-items: flex-start;
+        }
+        .image-card {
+            flex: 1 1 300px;
+            text-align: center;
+        }
+        .image-card img {
+            width: 100%;
+            height: auto;
+            max-height: 400px;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            background: #f9fafb;
+        }
+        .image-caption {
+            font-size: 0.85rem;
+            color: #6b7280;
+            margin-top: 0.5rem;
+        }
+        @media (max-width: 640px) {
+            .container { padding: 1.5rem 1rem; }
+            h1 { font-size: 1.5rem; }
+            .image-card { flex: 1 1 100%; }
+        }
+    </style>
+</head>
 <body>
-  <h2>📡 路由器设置参数</h2>
-  <pre>
-SSID: Lab-5G
-密码: super-secret-wifi
-管理IP: 192.168.1.1
-...
-  </pre>
+    <div class="container">
+        <a href="index.html" class="back-link">← 返回首页</a>
+        <h1>Tailscale 设置</h1>
+
+        <h2>简介及注意实项</h2>
+        <p>Tailscale 是一种新型的虚拟组网技术，通过在实验室路由器上设置出口节点，可以使虚拟网络内的设备获得与校园网内实体设备相同的网络环境。实现对实验室内网设备、知网和 WOS 等资源的访问。</p>
+        <p>为实现免费资源配置，实验室的 Tailscale 使用个人账号进行管理，加入该虚拟网络的设备均可查看其余设备的虚拟 IP 地址并能以 LAN 网相互访问设备资源。为确保虚拟网络能长久运行并确保网络安全，请注意如下事项：</p>
+        <ol>
+            <li>禁止将该网络分享给非实验室人员使用</li>
+            <li>资源访问结束后，请及时断开 Tailscale 连接，以保证连接设备的安全</li>
+            <li>禁止使用该虚拟网络访问非法资源</li>
+        </ol>
+
+        <h2>加入虚拟局域网流程</h2>
+
+        <h3>App 下载</h3>
+        <p>Tailscale 支持包括 macOS、iOS、Windows、Linux、Android 在内的全平台，相关客户端可在官网页面下载：<a href="https://tailscale.com/download/android" target="_blank" rel="noopener">https://tailscale.com/download/android</a></p>
+
+        <h4>iOS 平台</h4>
+        <p>需使用外区账号下载 App，可以加我微信 <code>272874621</code> 或者在 <code>306D快乐群</code> 中@我。</p>
+
+        <h4>Android 平台</h4>
+        <p>目前提供一个 <code>1.96.4</code> 版本的 xapk 文件下载，请下载 <code>7z文件</code> 解压缩后，使用 xapk 安装器安装。</p>
+        <a href="apks/Tailscale_1.96.4.7z" class="download-btn">📥 下载 Tailscale 1.96.4 (7z)</a>
+
+        <h3>加入网络</h3>
+        <p>安装 App 后联系我（微信或群中@）获取密钥，该密钥一次性使用，请勿发送给其他人。密钥具有有效期，请尽快登录使用。</p>
+        <p>获得密钥后以 iOS 界面为例，使用 <code>auth key</code> 方式登录账号。</p>
+
+        <!-- 图片区域：两张截图并排，高度一致，宽度自适应 -->
+        <div class="image-grid">
+            <div class="image-card">
+                <img src="images/login.jpg" alt="登录界面截图">
+                <div class="image-caption">使用 auth key 登录</div>
+            </div>
+            <div class="image-card">
+                <img src="images/exit_node.jpg" alt="出口节点设置截图">
+                <div class="image-caption">选择 lab-router 作为出口节点</div>
+            </div>
+        </div>
+
+        <p>登录账号后请联系我，我会在管理后台中授权并设置登录永久不过期。</p>
+
+        <h3>设置出口节点</h3>
+        <p>登录账号后，可直接启用连接。部分平台会要求输入手机密码以设置 VPN 访问权限。</p>
+        <p>登录账号后，在 <code>EXIT NODE</code> 处点击下拉菜单，选择 <code>lab-router</code> 作为出口节点。</p>
+        <p>此时设备的访问流量将从实验室路由器发出，如果存在访问不了的情况，请关闭连接后重连尝试。</p>
+
+        <h2>测试连接</h2>
+        <ol>
+            <li>仅校内登录网站：<a href="http://advise.hust.edu.cn/xinfang/#/web/homePage" target="_blank" rel="noopener">接诉即办平台</a></li>
+            <li>登录电脑网页版知网会提示单位用户为：华中科技大学。<a href="https://www.cnki.net/" target="_blank" rel="noopener">知网链接</a></li>
+        </ol>
+    </div>
 </body>
 </html>
