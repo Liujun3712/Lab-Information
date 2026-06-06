@@ -92,8 +92,9 @@ files.forEach(file => {
       box-sizing: border-box;
       transition: background 0.2s;
     }
-    button:hover {
-      background: #1d4ed8;
+    button:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
     }
     .error {
       color: #dc2626;
@@ -101,14 +102,20 @@ files.forEach(file => {
       display: none;
       font-size: 0.9rem;
     }
+    .countdown {
+      color: #6b7280;
+      font-size: 0.85rem;
+      margin-top: 0.5rem;
+    }
   </style>
 </head>
 <body>
   <div class="box" id="lock">
     <h2>🔐 需要密码</h2>
     <input type="password" id="pwd" placeholder="输入访问密码" onkeydown="if(event.key==='Enter')decrypt()">
-    <button onclick="decrypt()">解锁</button>
+    <button id="unlockBtn" onclick="decrypt()">解锁</button>
     <div class="error" id="error">密码错误，请重试</div>
+    <div class="countdown" id="countdown"></div>
   </div>
   <div id="content" style="display:none; width:100%; max-width:800px; background:white; padding:2rem; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.1);"></div>
 
@@ -117,9 +124,54 @@ files.forEach(file => {
     const saltHex = '${salt.toString('hex')}';
     const ivHex = '${iv.toString('hex')}';
 
+    const MAX_ATTEMPTS = 5;
+    const LOCKOUT_MINUTES = 15;
+
+    let attempts = parseInt(localStorage.getItem('pwd_attempts') || '0');
+    let lockoutExpiry = parseInt(localStorage.getItem('pwd_lockout') || '0');
+
+    const input = document.getElementById('pwd');
+    const button = document.getElementById('unlockBtn');
+    const errorDiv = document.getElementById('error');
+    const countdownDiv = document.getElementById('countdown');
+
+    function updateUI() {
+      const now = Date.now();
+      if (lockoutExpiry > now) {
+        // 锁定状态
+        input.disabled = true;
+        button.disabled = true;
+        errorDiv.style.display = 'none';
+        const remaining = Math.ceil((lockoutExpiry - now) / 1000);
+        const minutes = Math.floor(remaining / 60);
+        const seconds = remaining % 60;
+        countdownDiv.textContent = '尝试次数过多，请 ' + minutes + '分' + (seconds < 10 ? '0' : '') + seconds + '秒 后再试';
+      } else {
+        // 未锁定或锁定已过期
+        input.disabled = false;
+        button.disabled = false;
+        countdownDiv.textContent = '';
+        if (lockoutExpiry !== 0 && lockoutExpiry <= now) {
+          // 锁定时间到期，清除记录
+          attempts = 0;
+          lockoutExpiry = 0;
+          localStorage.removeItem('pwd_attempts');
+          localStorage.removeItem('pwd_lockout');
+        }
+      }
+    }
+
+    function lockout() {
+      lockoutExpiry = Date.now() + LOCKOUT_MINUTES * 60 * 1000;
+      localStorage.setItem('pwd_lockout', lockoutExpiry);
+      updateUI();
+    }
+
     async function decrypt() {
-      const userPassword = document.getElementById('pwd').value;
+      if (input.disabled) return;
+      const userPassword = input.value;
       if (!userPassword) return;
+
       try {
         const enc = new TextEncoder();
         const keyMaterial = await crypto.subtle.importKey('raw', enc.encode(userPassword), 'PBKDF2', false, ['deriveKey']);
@@ -132,13 +184,29 @@ files.forEach(file => {
         const encryptedBytes = Uint8Array.from(atob(encryptedData), c => c.charCodeAt(0));
         const decrypted = await crypto.subtle.decrypt({ name: 'AES-CBC', iv }, key, encryptedBytes);
         const plaintext = new TextDecoder().decode(decrypted);
+        // 成功：清除计数和锁定
+        attempts = 0;
+        lockoutExpiry = 0;
+        localStorage.removeItem('pwd_attempts');
+        localStorage.removeItem('pwd_lockout');
         document.getElementById('lock').style.display = 'none';
         document.getElementById('content').innerHTML = plaintext;
         document.getElementById('content').style.display = 'block';
       } catch (e) {
-        document.getElementById('error').style.display = 'block';
+        // 密码错误
+        attempts++;
+        localStorage.setItem('pwd_attempts', attempts);
+        errorDiv.style.display = 'block';
+        input.value = '';
+        if (attempts >= MAX_ATTEMPTS) {
+          lockout();
+        }
       }
     }
+
+    // 页面加载时及每秒更新一次倒计时
+    updateUI();
+    setInterval(updateUI, 1000);
   </script>
 </body>
 </html>`;
